@@ -1,0 +1,808 @@
+!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>洛克王国精灵反查器</title>
+
+<style>
+body {
+  font-family: Arial;
+  text-align: center;
+  background: #f0f2f5;
+}
+.card {
+  border: none;
+  background: white;
+  margin: 10px;
+  padding: 10px;
+  display: inline-block;
+  width: 150px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+img {
+  width: 100px;
+  height: 100px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h2>🔍 洛克王国精灵反查器</h2>
+
+身高(m)：<input id="height"><br><br>
+体重(kg)：<input id="weight"><br><br>
+误差：<input id="tol" value="0.02"><br><br>
+
+<button onclick="search()">查询</button>
+
+<div id="result"></div>
+
+<script>
+
+const data = [
+  {
+    "name": "小灵面",
+    "height_min": 0.17,
+    "height_max": 0.20,
+    "weight_min": 0.038,
+    "weight_max": 0.05,
+    "image": "images/xiaolingmian.png"
+  },
+  {
+    "name": "蒲公英",
+    "height_min": 0.14,
+    "height_max": 0.17,
+    "weight_min": 0.05,
+    "weight_max": 0.08,
+    "image": "images/pugongying.png"
+  },
+  {
+    "name": "旋叶虫",
+    "height_min": 0.04,
+    "height_max": 0.06,
+    "weight_min": 0.057,
+    "weight_max": 0.09,
+    "image": "images/xuanvechong.png"
+  },
+  {
+    "name": "逗逗",
+    "height_min": 0.13,
+    "height_max": 0.15,
+    "weight_min": 0.27,
+    "weight_max": 0.28,
+    "image": "images/doudou.png"
+  },
+  {
+    "name": "菇菇丁",
+    "height_min": 0.11,
+    "height_max": 0.15,
+    "weight_min": 0.38,
+    "weight_max": 0.48,
+    "image": "images/guguding.png"
+  },
+  {
+    "name": "豆丁鱼",
+    "height_min": 0.13,
+    "height_max": 0.18,
+    "weight_min": 0.44,
+    "weight_max": 0.59,
+    "image": "images/doudingyu.png"
+  },
+  {
+    "name": "小鹬",
+    "height_min": 0.11,
+    "height_max": 0.13,
+    "weight_min": 0.49,
+    "weight_max": 0.70,
+    "image": "images/xiaoyu.png"
+  },
+  {
+    "name": "地鼠",
+    "height_min": 0.20,
+    "height_max": 0.26,
+    "weight_min": 0.64,
+    "weight_max": 0.88,
+    "image": "images/dishu.png"
+  },
+  {
+    "name": "哭哭菇",
+    "height_min": 0.14,
+    "height_max": 0.20,
+    "weight_min": 0.71,
+    "weight_max": 1.23,
+    "image": "images/kukugu.png"
+  },
+  {
+    "name": "小草虫",
+    "height_min": 0.20,
+    "height_max": 0.26,
+    "weight_min": 0.75,
+    "weight_max": 1.14,
+    "image": "images/xiaocaocong.png"
+  },
+  {
+    "name": "闪电环",
+    "height_min": 0.16,
+    "height_max": 0.19,
+    "weight_min": 0.89,
+    "weight_max": 1.20,
+    "image": "images/shandianhuan.png"
+  },
+  {
+    "name": "螺旋帕帕",
+    "height_min": 0.15,
+    "height_max": 0.17,
+    "weight_min": 0.83,
+    "weight_max": 1.32,
+    "image": "images/luoxuanpapa.png"
+  },
+  {
+    "name": "公平鸽",
+    "height_min": 0.20,
+    "height_max": 0.23,
+    "weight_min": 0.99,
+    "weight_max": 1.29,
+    "image": "images/gongpingge.png"
+  },
+  {
+    "name": "花怨鳗",
+    "height_min": 0.25,
+    "height_max": 0.27,
+    "weight_min": 1.01,
+    "weight_max": 1.38,
+    "image": "images/huayuanman.png"
+  },
+  {
+    "name": "刺轮砣",
+    "height_min": 0.09,
+    "height_max": 0.13,
+    "weight_min": 1.06,
+    "weight_max": 1.49,
+    "image": "images/ciluntuo.png"
+  },
+  {
+    "name": "伊贝尔",
+    "height_min": 0.19,
+    "height_max": 0.26,
+    "weight_min": 1.19,
+    "weight_max": 1.65,
+    "image": "images/yibeier.png"
+  },
+  {
+    "name": "毛毛",
+    "height_min": 0.14,
+    "height_max": 0.19,
+    "weight_min": 1.23,
+    "weight_max": 1.78,
+    "image": "images/maomao.png"
+  },
+  {
+    "name": "海枝枝",
+    "height_min": 0.32,
+    "height_max": 0.35,
+    "weight_min": 1.24,
+    "weight_max": 2.50,
+    "image": "images/haizhizhi.png"
+  },
+  {
+    "name": "恶魔叮",
+    "height_min": 0.17,
+    "height_max": 0.21,
+    "weight_min": 1.26,
+    "weight_max": 1.49,
+    "image": "images/emoding.png"
+  },
+  {
+    "name": "绿翼鸟",
+    "height_min": 0.21,
+    "height_max": 0.22,
+    "weight_min": 1.27,
+    "weight_max": 1.47,
+    "image": "images/lvyiniao.png"
+  },
+  {
+    "name": "优优",
+    "height_min": 0.18,
+    "height_max": 0.21,
+    "weight_min": 1.28,
+    "weight_max": 1.48,
+    "image": "images/youyou.png"
+  },
+  {
+    "name": "小电企鹅",
+    "height_min": 0.19,
+    "height_max": 0.23,
+    "weight_min": 1.30,
+    "weight_max": 2.00,
+    "image": "images/xiaodianqie.png"
+  },
+  {
+    "name": "号儿鱼",
+    "height_min": 0.13,
+    "height_max": 0.17,
+    "weight_min": 1.40,
+    "weight_max": 2.02,
+    "image": "images/haoeryu.png"
+  },
+  {
+    "name": "格兰种子",
+    "height_min": 0.19,
+    "height_max": 0.22,
+    "weight_min": 1.49,
+    "weight_max": 1.91,
+    "image": "images/geilanzhongzi.png"
+  },
+  {
+    "name": "小黑猫",
+    "height_min": 0.25,
+    "height_max": 0.27,
+    "weight_min": 1.50,
+    "weight_max": 1.78,
+    "image": "images/xiaoheimao.png"
+  },
+  {
+    "name": "果冻",
+    "height_min": 0.13,
+    "height_max": 0.15,
+    "weight_min": 1.55,
+    "weight_max": 2.23,
+    "image": "images/guodong.png"
+  },
+  {
+    "name": "一窝蜂",
+    "height_min": 0.17,
+    "height_max": 0.22,
+    "weight_min": 1.56,
+    "weight_max": 2.16,
+    "image": "images/yiwofeng.png"
+  },
+  {
+    "name": "小夜",
+    "height_min": 0.23,
+    "height_max": 0.29,
+    "weight_min": 1.62,
+    "weight_max": 2.73,
+    "image": "images/xiaoye.png"
+  },
+  {
+    "name": "奇丽草",
+    "height_min": 0.18,
+    "height_max": 0.21,
+    "weight_min": 1.65,
+    "weight_max": 2.06,
+    "image": "images/qilicao.png"
+  },
+  {
+    "name": "乖乖鹊",
+    "height_min": 0.22,
+    "height_max": 0.27,
+    "weight_min": 1.66,
+    "weight_max": 2.11,
+    "image": "images/guaiguaique.png"
+  },
+  {
+    "name": "可立鸡",
+    "height_min": 0.17,
+    "height_max": 0.22,
+    "weight_min": 1.66,
+    "weight_max": 2.68,
+    "image": "images/keliji.png"
+  },
+  {
+    "name": "蹦蹦种子",
+    "height_min": 0.22,
+    "height_max": 0.27,
+    "weight_min": 1.69,
+    "weight_max": 2.12,
+    "image": "images/bengbengzhongzi.png"
+  },
+  {
+    "name": "斑斑",
+    "height_min": 0.20,
+    "height_max": 0.25,
+    "weight_min": 1.69,
+    "weight_max": 2.46,
+    "image": "images/banban.png"
+  },
+  {
+    "name": "菊花梨",
+    "height_min": 0.30,
+    "height_max": 0.30,
+    "weight_min": 1.73,
+    "weight_max": 1.73,
+    "image": "images/juhuali.png"
+  },
+  {
+    "name": "奔波波鼠",
+    "height_min": 0.22,
+    "height_max": 0.30,
+    "weight_min": 1.77,
+    "weight_max": 2.40,
+    "image": "images/benboboshu.png"
+  },
+  {
+    "name": "乌达",
+    "height_min": 0.20,
+    "height_max": 0.23,
+    "weight_min": 1.77,
+    "weight_max": 2.28,
+    "image": "images/wuda.png"
+  },
+  {
+    "name": "绿耳松鼠",
+    "height_min": 0.24,
+    "height_max": 0.28,
+    "weight_min": 1.79,
+    "weight_max": 2.30,
+    "image": "images/lversongshu.png"
+  },
+  {
+    "name": "兽花蕾",
+    "height_min": 0.17,
+    "height_max": 0.17,
+    "weight_min": 1.80,
+    "weight_max": 1.99,
+    "image": "images/shouhuale.png"
+  },
+  {
+    "name": "丢丢",
+    "height_min": 0.17,
+    "height_max": 0.21,
+    "weight_min": 1.84,
+    "weight_max": 2.41,
+    "image": "images/diudiu.png"
+  },
+  {
+    "name": "波波螺",
+    "height_min": 0.15,
+    "height_max": 0.16,
+    "weight_min": 1.89,
+    "weight_max": 2.11,
+    "image": "images/boboboluo.png"
+  },
+  {
+    "name": "草头鸭",
+    "height_min": 0.23,
+    "height_max": 0.27,
+    "weight_min": 1.93,
+    "weight_max": 2.36,
+    "image": "images/caotouya.png"
+  },
+  {
+    "name": "呆小路",
+    "height_min": 0.30,
+    "height_max": 0.32,
+    "weight_min": 1.98,
+    "weight_max": 2.12,
+    "image": "images/daxiaolu.png"
+  },
+  {
+    "name": "小箱怪",
+    "height_min": 0.16,
+    "height_max": 0.18,
+    "weight_min": 1.98,
+    "weight_max": 2.51,
+    "image": "images/xiaoxiangguai.png"
+  },
+  {
+    "name": "矿石石",
+    "height_min": 0.28,
+    "height_max": 0.28,
+    "weight_min": 2.29,
+    "weight_max": 2.29,
+    "image": "images/kuangshishi.png"
+  },
+  {
+    "name": "多西",
+    "height_min": 0.34,
+    "height_max": 0.34,
+    "weight_min": 2.42,
+    "weight_max": 2.42,
+    "image": "images/duoxi.png"
+  },
+  {
+    "name": "呼呼猪",
+    "height_min": 0.22,
+    "height_max": 0.31,
+    "weight_min": 2.43,
+    "weight_max": 3.52,
+    "image": "images/huhuzhu.png"
+  },
+  {
+    "name": "雪娃娃",
+    "height_min": 0.12,
+    "height_max": 0.17,
+    "weight_min": 2.45,
+    "weight_max": 3.12,
+    "image": "images/xuewawa.png"
+  },
+  {
+    "name": "小鼠獭",
+    "height_min": 0.17,
+    "height_max": 2.00,
+    "weight_min": 2.49,
+    "weight_max": 2.77,
+    "image": "images/xiaoshuta.png"
+  },
+  {
+    "name": "古钟蛇",
+    "height_min": 0.45,
+    "height_max": 0.46,
+    "weight_min": 2.52,
+    "weight_max": 3.12,
+    "image": "images/guzhongshe.png"
+  },
+  {
+    "name": "小甲虫",
+    "height_min": 0.22,
+    "height_max": 0.23,
+    "weight_min": 2.61,
+    "weight_max": 2.64,
+    "image": "images/xiaojiachong.png"
+  },
+  {
+    "name": "海盗虫",
+    "height_min": 0.23,
+    "height_max": 0.29,
+    "weight_min": 2.62,
+    "weight_max": 3.39,
+    "image": "images/haidaochong.png"
+  },
+  {
+    "name": "板板壳",
+    "height_min": 0.23,
+    "height_max": 0.31,
+    "weight_min": 2.63,
+    "weight_max": 4.00,
+    "image": "images/banbanke.png"
+  },
+  {
+    "name": "灵狐",
+    "height_min": 0.24,
+    "height_max": 0.31,
+    "weight_min": 2.68,
+    "weight_max": 3.35,
+    "image": "images/linghu.png"
+  },
+  {
+    "name": "电咩咩",
+    "height_min": 0.27,
+    "height_max": 0.28,
+    "weight_min": 2.80,
+    "weight_max": 2.96,
+    "image": "images/dianmiemie.png"
+  },
+  {
+    "name": "拉特",
+    "height_min": 0.22,
+    "height_max": 0.25,
+    "weight_min": 2.93,
+    "weight_max": 3.37,
+    "image": "images/late.png"
+  },
+  {
+    "name": "甜田螺",
+    "height_min": 0.20,
+    "height_max": 0.20,
+    "weight_min": 3.12,
+    "weight_max": 3.16,
+    "image": "images/tiantianluo.png"
+  },
+  {
+    "name": "吸泥鸥",
+    "height_min": 0.23,
+    "height_max": 0.29,
+    "weight_min": 3.55,
+    "weight_max": 4.91,
+    "image": "images/xiniou.png"
+  },
+  {
+    "name": "雪豆丁",
+    "height_min": 0.39,
+    "height_max": 0.45,
+    "weight_min": 3.63,
+    "weight_max": 4.31,
+    "image": "images/xuedouding.png"
+  },
+  {
+    "name": "机械方方",
+    "height_min": 0.22,
+    "height_max": 0.22,
+    "weight_min": 3.67,
+    "weight_max": 3.67,
+    "image": "images/jixiefangfang.png"
+  },
+  {
+    "name": "小狮鹫",
+    "height_min": 0.31,
+    "height_max": 0.33,
+    "weight_min": 4.30,
+    "weight_max": 4.92,
+    "image": "images/xiaoshijiu.png"
+  },
+  {
+    "name": "治愈兔",
+    "height_min": 0.25,
+    "height_max": 0.34,
+    "weight_min": 4.33,
+    "weight_max": 5.71,
+    "image": "images/zhiyutu.png"
+  },
+  {
+    "name": "棋棋",
+    "height_min": 0.17,
+    "height_max": 0.19,
+    "weight_min": 4.40,
+    "weight_max": 5.30,
+    "image": "images/qiqi.png"
+  },
+  {
+    "name": "护主犬",
+    "height_min": 0.27,
+    "height_max": 0.37,
+    "weight_min": 4.85,
+    "weight_max": 6.75,
+    "image": "images/huzhuquan.png"
+  },
+  {
+    "name": "锥尾羊",
+    "height_min": 0.26,
+    "height_max": 0.31,
+    "weight_min": 4.92,
+    "weight_max": 6.05,
+    "image": "images/zhuiweiyang.png"
+  },
+  {
+    "name": "鸭吉吉",
+    "height_min": 0.30,
+    "height_max": 0.39,
+    "weight_min": 5.59,
+    "weight_max": 6.94,
+    "image": "images/yajiji.png"
+  },
+  {
+    "name": "多多",
+    "height_min": 0.21,
+    "height_max": 0.25,
+    "weight_min": 5.60,
+    "weight_max": 6.84,
+    "image": "images/duoduo.png"
+  },
+  {
+    "name": "风铃鲨",
+    "height_min": 0.20,
+    "height_max": 0.24,
+    "weight_min": 5.63,
+    "weight_max": 6.45,
+    "image": "images/fenglingsha.png"
+  },
+  {
+    "name": "胆小鳗鱼",
+    "height_min": 0.33,
+    "height_max": 0.39,
+    "weight_min": 6.76,
+    "weight_max": 8.94,
+    "image": "images/danxiaomanyu.png"
+  },
+  {
+    "name": "小怂猫",
+    "height_min": 0.25,
+    "height_max": 0.35,
+    "weight_min": 6.86,
+    "weight_max": 8.93,
+    "image": "images/xiaosongmao.png"
+  },
+  {
+    "name": "白发懒人",
+    "height_min": 0.31,
+    "height_max": 0.43,
+    "weight_min": 7.03,
+    "weight_max": 9.31,
+    "image": "images/baifalanren.png"
+  },
+  {
+    "name": "布是石",
+    "height_min": 0.18,
+    "height_max": 0.25,
+    "weight_min": 7.10,
+    "weight_max": 12.51,
+    "image": "images/bushishi.png"
+  },
+  {
+    "name": "火尾瓦特",
+    "height_min": 0.31,
+    "height_max": 0.38,
+    "weight_min": 7.14,
+    "weight_max": 8.34,
+    "image": "images/huoweiwate.png"
+  },
+  {
+    "name": "石肤蜥",
+    "height_min": 0.21,
+    "height_max": 0.29,
+    "weight_min": 7.67,
+    "weight_max": 13.40,
+    "image": "images/shifuxi.png"
+  },
+  {
+    "name": "大头骨龙",
+    "height_min": 0.37,
+    "height_max": 0.40,
+    "weight_min": 8.30,
+    "weight_max": 11.41,
+    "image": "images/datougulong.png"
+  },
+  {
+    "name": "伊雷龙",
+    "height_min": 0.31,
+    "height_max": 0.36,
+    "weight_min": 9.59,
+    "weight_max": 12.26,
+    "image": "images/yileilong.png"
+  },
+  {
+    "name": "小星光",
+    "height_min": 0.33,
+    "height_max": 0.42,
+    "weight_min": 9.62,
+    "weight_max": 12.93,
+    "image": "images/xiaoxingguang.png"
+  },
+  {
+    "name": "权杖-II",
+    "height_min": 0.19,
+    "height_max": 0.23,
+    "weight_min": 9.99,
+    "weight_max": 13.90,
+    "image": "images/quanzhang2.png"
+  },
+  {
+    "name": "幽影树",
+    "height_min": 0.28,
+    "height_max": 0.36,
+    "weight_min": 10.73,
+    "weight_max": 14.03,
+    "image": "images/youyingshu.png"
+  },
+  {
+    "name": "水母",
+    "height_min": 0.21,
+    "height_max": 0.28,
+    "weight_min": 11.20,
+    "weight_max": 14.24,
+    "image": "images/shuimu.png"
+  },
+  {
+    "name": "电动长颈鹿",
+    "height_min": 0.33,
+    "height_max": 0.42,
+    "weight_min": 11.58,
+    "weight_max": 14.86,
+    "image": "images/diandongchangjinglu.png"
+  },
+  {
+    "name": "提塔",
+    "height_min": 0.28,
+    "height_max": 0.31,
+    "weight_min": 14.10,
+    "weight_max": 17.03,
+    "image": "images/tita.png"
+  },
+  {
+    "name": "小独角兽",
+    "height_min": 0.42,
+    "height_max": 0.58,
+    "weight_min": 14.55,
+    "weight_max": 21.84,
+    "image": "images/xiaodujiaoshou.png"
+  },
+  {
+    "name": "里拉鳐",
+    "height_min": 0.41,
+    "height_max": 0.46,
+    "weight_min": 14.65,
+    "weight_max": 19.20,
+    "image": "images/liliayao.png"
+  },
+  {
+    "name": "阿米亚特",
+    "height_min": 0.28,
+    "height_max": 0.46,
+    "weight_min": 16.22,
+    "weight_max": 19.15,
+    "image": "images/amiayate.png"
+  },
+  {
+    "name": "嘟嘟煲",
+    "height_min": 0.28,
+    "height_max": 0.33,
+    "weight_min": 17.45,
+    "weight_max": 22.31,
+    "image": "images/dudubao.png"
+  },
+  {
+    "name": "锤头鹳",
+    "height_min": 0.47,
+    "height_max": 0.63,
+    "weight_min": 18.58,
+    "weight_max": 25.36,
+    "image": "images/chu touguan.png"
+  },
+  {
+    "name": "石石",
+    "height_min": 0.17,
+    "height_max": 0.20,
+    "weight_min": 24.53,
+    "weight_max": 27.59,
+    "image": "images/shishi.png"
+  },
+  {
+    "name": "海豹战士",
+    "height_min": 0.28,
+    "height_max": 0.38,
+    "weight_min": 25.67,
+    "weight_max": 34.48,
+    "image": "images/haibaozhanshi.png"
+  },
+  {
+    "name": "恶魔狼",
+    "height_min": 0.52,
+    "height_max": 0.72,
+    "weight_min": 26.00,
+    "weight_max": 36.00,
+    "image": "images/emolang.png"
+  },
+  {
+    "name": "记忆石",
+    "height_min": 0.43,
+    "height_max": 0.58,
+    "weight_min": 33.73,
+    "weight_max": 44.33,
+    "image": "images/jiyishi.png"
+  }
+];
+
+function score(p, h, w){
+  let ph = (p.height_min + p.height_max)/2;
+  let pw = (p.weight_min + p.weight_max)/2;
+  return Math.sqrt((ph-h)**2 + (pw-w)**2);
+}
+
+function search(){
+  let h = parseFloat(document.getElementById("height").value);
+  let w = parseFloat(document.getElementById("weight").value);
+  let t = parseFloat(document.getElementById("tol").value);
+
+  let res = data.filter(p =>
+    h+t >= p.height_min &&
+    h-t <= p.height_max &&
+    w+t >= p.weight_min &&
+    w-t <= p.weight_max
+  );
+
+  res.sort((a,b)=>score(a,h,w)-score(b,h,w));
+
+  let html = "";
+
+  if(res.length === 0){
+    html = "没有匹配精灵";
+  }else{
+    res.forEach(p=>{
+      html += `
+      <div class="card">
+        <h4>${p.name}</h4>
+        <img src="${p.image}" onerror="this.style.display='none'">
+      </div>`;
+    });
+  }
+
+  document.getElementById("result").innerHTML = html;
+}
+
+</script>
+
+</body>
+</html>
